@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}登录 - 医院预约挂号系统{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">用户登录</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">用户类型</label>
+                        <select name="user_type" class="form-select" required>
+                            <option value="patient">患者</option>
+                            <option value="doctor">医生</option>
+                            <option value="admin">管理员</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">用户名</label>
+                        <input type="text" class="form-control" name="username" required>
+                        <div class="form-text">患者请输入身份证号，医生请输入工号，管理员请输入用户名</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">密码</label>
+                        <input type="password" class="form-control" name="password" required>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">登录</button>
+                    </div>
+                </form>
+                <div class="mt-3 text-center">
+                    <p>还没有账号？<a href="{{ url_for('auth.register') }}">立即注册</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

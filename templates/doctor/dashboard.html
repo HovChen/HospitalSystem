@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}医生工作台 - 医院预约挂号系统{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">今日预约</h4>
+            </div>
+            <div class="card-body">
+                {% if today_appointments %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>时间</th>
+                                    <th>患者姓名</th>
+                                    <th>性别</th>
+                                    <th>年龄</th>
+                                    <th>联系电话</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for appointment in today_appointments %}
+                                <tr>
+                                    <td>{{ appointment.appointment_time }}</td>
+                                    <td>{{ appointment.patient.name }}</td>
+                                    <td>{{ appointment.patient.gender }}</td>
+                                    <td>{{ appointment.patient.age }}</td>
+                                    <td>{{ appointment.patient.phone }}</td>
+                                    <td>
+                                        {% if appointment.status == 'pending' %}
+                                            <span class="badge bg-warning">待就诊</span>
+                                        {% elif appointment.status == 'in_progress' %}
+                                            <span class="badge bg-info">就诊中</span>
+                                        {% elif appointment.status == 'completed' %}
+                                            <span class="badge bg-success">已完成</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if appointment.status == 'pending' %}
+                                            <button class="btn btn-sm btn-primary"
+                                                    onclick="startConsultation({{ appointment.id }})">
+                                                开始就诊
+                                            </button>
+                                        {% elif appointment.status == 'in_progress' %}
+                                            <a href="{{ url_for('doctor.create_report', appointment_id=appointment.id) }}"
+                                               class="btn btn-sm btn-success">
+                                                填写报告
+                                            </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-center text-muted py-4">今日暂无预约</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">本周排班</h4>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>日期</th>
+                                <th>时间</th>
+                                <th>剩余号源</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for schedule in schedules %}
+                            <tr>
+                                <td>{{ schedule.work_date }}</td>
+                                <td>{{ schedule.start_time }} - {{ schedule.end_time }}</td>
+                                <td>{{ schedule.available_slots }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('doctor.manage_schedule') }}" class="btn btn-primary">
+                        管理排班
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">待处理报告</h4>
+            </div>
+            <div class="card-body">
+                {% if pending_reports %}
+                    <div class="list-group">
+                        {% for appointment in pending_reports %}
+                        <a href="{{ url_for('doctor.create_report', appointment_id=appointment.id) }}"
+                           class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">{{ appointment.patient.name }}</h5>
+                                <small>{{ appointment.appointment_date }}</small>
+                            </div>
+                            <p class="mb-1">就诊时间：{{ appointment.appointment_time }}</p>
+                        </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-center text-muted py-4">暂无待处理报告</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function startConsultation(appointmentId) {
+    if (confirm('确定开始就诊？')) {
+        fetch(`/doctor/start_consultation/${appointmentId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('操作失败，请稍后重试');
+        });
+    }
+}
+</script>
+{% endblock %} 

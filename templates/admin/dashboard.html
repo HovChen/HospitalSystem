@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block title %}管理面板 - 医院预约挂号系统{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- 统计卡片 -->
+    <div class="col-md-3 mb-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h5 class="card-title">总患者数</h5>
+                <h2 class="card-text">{{ total_patients }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h5 class="card-title">总医生数</h5>
+                <h2 class="card-text">{{ total_doctors }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <h5 class="card-title">总预约数</h5>
+                <h2 class="card-text">{{ total_appointments }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <h5 class="card-title">待处理异常</h5>
+                <h2 class="card-text">{{ pending_exceptions }}</h2>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 科室预约统计 -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">科室预约统计</h4>
+            </div>
+            <div class="card-body">
+                {% if department_labels and department_data %}
+                    <canvas id="departmentChart"></canvas>
+                {% else %}
+                    <p class="text-center text-muted py-4">暂无预约数据</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- 医生评分排行 -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">医生评分排行</h4>
+            </div>
+            <div class="card-body">
+                {% if doctor_names and doctor_ratings %}
+                    <canvas id="ratingChart"></canvas>
+                {% else %}
+                    <p class="text-center text-muted py-4">暂无评分数据</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- 最近异常记录 -->
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">最近异常记录</h4>
+                <a href="{{ url_for('admin.view_exceptions') }}" class="btn btn-primary btn-sm">查看全部</a>
+            </div>
+            <div class="card-body">
+                {% if recent_exceptions %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>时间</th>
+                                    <th>描述</th>
+                                    <th>状态</th>
+                                    <th>处理人</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for exception in recent_exceptions %}
+                                <tr>
+                                    <td>{{ exception.discovery_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>{{ exception.description }}</td>
+                                    <td>
+                                        {% if exception.status == 'pending' %}
+                                            <span class="badge bg-warning">待处理</span>
+                                        {% elif exception.status == 'processing' %}
+                                            <span class="badge bg-info">处理中</span>
+                                        {% elif exception.status == 'resolved' %}
+                                            <span class="badge bg-success">已解决</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ exception.handler.username if exception.handler else '-' }}</td>
+                                    <td>
+                                        {% if exception.status == 'pending' %}
+                                            <button class="btn btn-sm btn-primary"
+                                                    onclick="handleException({{ exception.id }})">
+                                                处理
+                                            </button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-center text-muted py-4">暂无异常记录</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+{% if department_labels and department_data %}
+// 科室预约统计图表
+const departmentCtx = document.getElementById('departmentChart').getContext('2d');
+new Chart(departmentCtx, {
+    type: 'bar',
+    data: {
+        labels: {{ department_labels | tojson }},
+        datasets: [{
+            label: '预约数量',
+            data: {{ department_data | tojson }},
+            backgroundColor: 'rgba(54, 162, 235, 0.5)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+{% endif %}
+
+{% if doctor_names and doctor_ratings %}
+// 医生评分排行图表
+const ratingCtx = document.getElementById('ratingChart').getContext('2d');
+new Chart(ratingCtx, {
+    type: 'bar',
+    data: {
+        labels: {{ doctor_names | tojson }},
+        datasets: [{
+            label: '平均评分',
+            data: {{ doctor_ratings | tojson }},
+            backgroundColor: 'rgba(75, 192, 192, 0.5)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 5
+            }
+        }
+    }
+});
+{% endif %}
+
+function handleException(exceptionId) {
+    const report = prompt('请输入处理报告：');
+    if (report) {
+        fetch(`/admin/handle_exception/${exceptionId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ handling_report: report })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('操作失败，请稍后重试');
+        });
+    }
+}
+</script>
+{% endblock %} 

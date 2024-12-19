@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}注册 - 医院预约挂号系统{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">患者注册</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">姓名</label>
+                            <input type="text" class="form-control" name="name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">性别</label>
+                            <select name="gender" class="form-select" required>
+                                <option value="male">男</option>
+                                <option value="female">女</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">身份证号</label>
+                            <input type="text" class="form-control" name="id_card" required
+                                   pattern="[0-9]{18}" title="请输入18位身份证号">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">出生日期</label>
+                            <input type="date" class="form-control" name="birth_date" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">联系电话</label>
+                            <input type="tel" class="form-control" name="phone" required
+                                   pattern="[0-9]{11}" title="请输入11位手机号">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">密码</label>
+                            <input type="password" class="form-control" name="password" required
+                                   minlength="6" title="密码长度至少6位">
+                        </div>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">注册</button>
+                    </div>
+                </form>
+                <div class="mt-3 text-center">
+                    <p>已有账号？<a href="{{ url_for('auth.login') }}">立即登录</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelector('form').addEventListener('submit', function(e) {
+    const idCard = document.querySelector('input[name="id_card"]').value;
+    const phone = document.querySelector('input[name="phone"]').value;
+    
+    if (!/^\d{18}$/.test(idCard)) {
+        alert('请输入正确的18位身份证号');
+        e.preventDefault();
+        return;
+    }
+    
+    if (!/^\d{11}$/.test(phone)) {
+        alert('请输入正确的11位手机号');
+        e.preventDefault();
+        return;
+    }
+});
+</script>
+{% endblock %} 

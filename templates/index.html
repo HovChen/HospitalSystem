@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}首页 - 医院预约挂号系统{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <h1 class="display-4 mb-4">欢迎使用医院预约挂号系统</h1>
+            <p class="lead mb-5">便捷预约，智能分诊，为您提供更好的就医体验</p>
+        </div>
+    </div>
+
+    <div class="row mb-5">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h3 class="card-title">患者服务</h3>
+                    <p class="card-text">在线预约挂号，查看检查报告，评价就医体验</p>
+                    {% if not current_user.is_authenticated %}
+                        <a href="{{ url_for('auth.register') }}" class="btn btn-primary">立即注册</a>
+                    {% else %}
+                        <a href="{{ url_for('patient.dashboard') }}" class="btn btn-primary">进入系统</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h3 class="card-title">医生工作站</h3>
+                    <p class="card-text">管理排班，查看患者信息，填写诊疗记录</p>
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-success">医生登录</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h3 class="card-title">管理员入口</h3>
+                    <p class="card-text">系统管理，数据统计，异常处理</p>
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-info">管理员登录</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">预约流程</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col">
+                            <div class="mb-3">
+                                <i class="fas fa-user-plus fa-2x text-primary"></i>
+                            </div>
+                            <h5>注册账号</h5>
+                            <p class="text-muted">填写个人信息</p>
+                        </div>
+                        <div class="col">
+                            <div class="mb-3">
+                                <i class="fas fa-calendar-alt fa-2x text-success"></i>
+                            </div>
+                            <h5>选择科室医生</h5>
+                            <p class="text-muted">查看排班信息</p>
+                        </div>
+                        <div class="col">
+                            <div class="mb-3">
+                                <i class="fas fa-clock fa-2x text-info"></i>
+                            </div>
+                            <h5>预约时间</h5>
+                            <p class="text-muted">选择就诊时段</p>
+                        </div>
+                        <div class="col">
+                            <div class="mb-3">
+                                <i class="fas fa-check-circle fa-2x text-warning"></i>
+                            </div>
+                            <h5>确认预约</h5>
+                            <p class="text-muted">等待到院就诊</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://kit.fontawesome.com/a076d05399.js"></script>
+{% endblock %} 

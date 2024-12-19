@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}预约挂号 - 医院预约挂号系统{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">预约挂号</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="appointmentForm">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">选择科室</label>
+                            <select class="form-select" id="department" required>
+                                <option value="">请选择科室</option>
+                                {% for dept in departments %}
+                                <option value="{{ dept }}">{{ dept }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">选择医生</label>
+                            <select class="form-select" name="doctor_id" id="doctor" required disabled>
+                                <option value="">请先选择科室</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">选择日期</label>
+                            <input type="date" class="form-control" name="appointment_date" id="date" required
+                                   min="{{ min_date }}" max="{{ max_date }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">选择时间</label>
+                            <select class="form-select" name="appointment_time" id="time" required disabled>
+                                <option value="">请先选择日期</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">医生信息</h5>
+                                    <div id="doctorInfo">
+                                        <p class="text-muted">请选择医生查看详细信息</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">确认预约</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='js/booking.js') }}"></script>
+{% endblock %} 

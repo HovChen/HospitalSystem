@@ -1,0 +1,78 @@
+/* 全局样式 */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.footer {
+    margin-top: auto;
+}
+
+/* 导航栏样式 */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+}
+
+/* 卡片样式 */
+.card {
+    box-shadow: 0 2px 4px rgba(0,0,0,.05);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,.1);
+    transform: translateY(-2px);
+}
+
+/* 按钮样式 */
+.btn {
+    border-radius: 20px;
+    padding: 8px 20px;
+}
+
+/* 表格样式 */
+.table th {
+    background-color: #f8f9fa;
+}
+
+/* 表单样式 */
+.form-control {
+    border-radius: 8px;
+}
+
+.form-control:focus {
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+/* 徽章样式 */
+.badge {
+    padding: 6px 12px;
+    border-radius: 12px;
+}
+
+/* 首页特殊样式 */
+.display-4 {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.lead {
+    color: #7f8c8d;
+}
+
+/* 图标样式 */
+.fas {
+    margin-bottom: 15px;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .display-4 {
+        font-size: 2.5rem;
+    }
+    
+    .card {
+        margin-bottom: 20px;
+    }
+} 
