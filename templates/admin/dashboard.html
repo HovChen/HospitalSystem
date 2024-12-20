@@ -3,124 +3,185 @@
 {% block title %}管理面板 - 医院预约挂号系统{% endblock %}
 
 {% block content %}
-<div class="row">
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-primary mb-4"><i class="fas fa-tachometer-alt me-2"></i>管理员仪表盘</h2>
+        </div>
+    </div>
+    
     <!-- 统计卡片 -->
-    <div class="col-md-3 mb-4">
-        <div class="card bg-primary text-white">
-            <div class="card-body">
-                <h5 class="card-title">总患者数</h5>
-                <h2 class="card-text">{{ total_patients }}</h2>
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(45deg, #4158D0, #C850C0);">
+                <div class="card-body text-white">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="card-subtitle">总患者数</h6>
+                            <h2 class="display-6 fw-bold mt-2 mb-0">{{ total_patients if total_patients is not none else 0 }}</h2>
+                        </div>
+                        <div>
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="col-md-3 mb-4">
-        <div class="card bg-success text-white">
-            <div class="card-body">
-                <h5 class="card-title">总医生数</h5>
-                <h2 class="card-text">{{ total_doctors }}</h2>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(45deg, #00B4DB, #0083B0);">
+                <div class="card-body text-white">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="card-subtitle">总医生数</h6>
+                            <h2 class="display-6 fw-bold mt-2 mb-0">{{ total_doctors if total_doctors is not none else 0 }}</h2>
+                        </div>
+                        <div>
+                            <i class="fas fa-user-md fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="col-md-3 mb-4">
-        <div class="card bg-info text-white">
-            <div class="card-body">
-                <h5 class="card-title">总预约数</h5>
-                <h2 class="card-text">{{ total_appointments }}</h2>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(45deg, #11998e, #38ef7d);">
+                <div class="card-body text-white">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="card-subtitle">总预约数</h6>
+                            <h2 class="display-6 fw-bold mt-2 mb-0">{{ total_appointments if total_appointments is not none else 0 }}</h2>
+                        </div>
+                        <div>
+                            <i class="fas fa-calendar-check fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="col-md-3 mb-4">
-        <div class="card bg-warning text-white">
-            <div class="card-body">
-                <h5 class="card-title">待处理异常</h5>
-                <h2 class="card-text">{{ pending_exceptions }}</h2>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(45deg, #FF512F, #F09819);">
+                <div class="card-body text-white">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="card-subtitle">待处理异常</h6>
+                            <h2 class="display-6 fw-bold mt-2 mb-0">{{ pending_exceptions if pending_exceptions is not none else 0 }}</h2>
+                        </div>
+                        <div>
+                            <i class="fas fa-exclamation-triangle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
     
-    <!-- 科室预约统计 -->
-    <div class="col-md-6 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h4 class="mb-0">科室预约统计</h4>
-            </div>
-            <div class="card-body">
-                {% if department_labels and department_data %}
-                    <canvas id="departmentChart"></canvas>
-                {% else %}
-                    <p class="text-center text-muted py-4">暂无预约数据</p>
-                {% endif %}
+    <!-- 图表区域 -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>科室预约统计</h5>
+                        <button class="btn btn-sm btn-outline-primary" onclick="refreshChart('departmentChart')">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if department_labels and department_data %}
+                        <canvas id="departmentChart" height="300"></canvas>
+                    {% else %}
+                        <div class="text-center text-muted py-5">
+                            <i class="fas fa-chart-bar fa-3x mb-3"></i>
+                            <p>暂无预约数据</p>
+                        </div>
+                    {% endif %}
+                </div>
             </div>
         </div>
-    </div>
-    
-    <!-- 医生评分排行 -->
-    <div class="col-md-6 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h4 class="mb-0">医生评分排行</h4>
-            </div>
-            <div class="card-body">
-                {% if doctor_names and doctor_ratings %}
-                    <canvas id="ratingChart"></canvas>
-                {% else %}
-                    <p class="text-center text-muted py-4">暂无评分数据</p>
-                {% endif %}
+        
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-star me-2"></i>医生评分排行</h5>
+                        <button class="btn btn-sm btn-outline-primary" onclick="refreshChart('ratingChart')">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if doctor_names and doctor_ratings %}
+                        <canvas id="ratingChart" height="300"></canvas>
+                    {% else %}
+                        <div class="text-center text-muted py-5">
+                            <i class="fas fa-star fa-3x mb-3"></i>
+                            <p>暂无评分数据</p>
+                        </div>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
     
     <!-- 最近异常记录 -->
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h4 class="mb-0">最近异常记录</h4>
-                <a href="{{ url_for('admin.view_exceptions') }}" class="btn btn-primary btn-sm">查看全部</a>
-            </div>
-            <div class="card-body">
-                {% if recent_exceptions %}
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>时间</th>
-                                    <th>描述</th>
-                                    <th>状态</th>
-                                    <th>处理人</th>
-                                    <th>操作</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for exception in recent_exceptions %}
-                                <tr>
-                                    <td>{{ exception.discovery_date.strftime('%Y-%m-%d %H:%M') }}</td>
-                                    <td>{{ exception.description }}</td>
-                                    <td>
-                                        {% if exception.status == 'pending' %}
-                                            <span class="badge bg-warning">待处理</span>
-                                        {% elif exception.status == 'processing' %}
-                                            <span class="badge bg-info">处理中</span>
-                                        {% elif exception.status == 'resolved' %}
-                                            <span class="badge bg-success">已解决</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ exception.handler.username if exception.handler else '-' }}</td>
-                                    <td>
-                                        {% if exception.status == 'pending' %}
-                                            <button class="btn btn-sm btn-primary"
-                                                    onclick="handleException({{ exception.id }})">
-                                                处理
-                                            </button>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-exclamation-circle me-2"></i>最近异常记录</h5>
+                        <a href="{{ url_for('admin.view_exceptions') }}" class="btn btn-sm btn-primary">
+                            查看全部 <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
                     </div>
-                {% else %}
-                    <p class="text-center text-muted py-4">暂无异常记录</p>
-                {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if recent_exceptions %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>时间</th>
+                                        <th>描述</th>
+                                        <th>状态</th>
+                                        <th>处理人</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for exception in recent_exceptions %}
+                                    <tr>
+                                        <td>{{ exception.discovery_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                                        <td>{{ exception.description }}</td>
+                                        <td>
+                                            {% if exception.status == 'pending' %}
+                                                <span class="badge bg-warning">待处理</span>
+                                            {% elif exception.status == 'processing' %}
+                                                <span class="badge bg-info">处理中</span>
+                                            {% elif exception.status == 'resolved' %}
+                                                <span class="badge bg-success">已解决</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ exception.handler.username if exception.handler else '-' }}</td>
+                                        <td>
+                                            {% if exception.status == 'pending' %}
+                                                <button class="btn btn-sm btn-primary" onclick="handleException({{ exception.id }})">
+                                                    <i class="fas fa-check me-1"></i>处理
+                                                </button>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-5">
+                            <i class="fas fa-check-circle fa-3x mb-3"></i>
+                            <p>暂无异常记录</p>
+                        </div>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
@@ -130,10 +191,20 @@
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+        legend: {
+            position: 'bottom'
+        }
+    }
+};
+
 {% if department_labels and department_data %}
 // 科室预约统计图表
 const departmentCtx = document.getElementById('departmentChart').getContext('2d');
-new Chart(departmentCtx, {
+const departmentChart = new Chart(departmentCtx, {
     type: 'bar',
     data: {
         labels: {{ department_labels | tojson }},
@@ -142,14 +213,23 @@ new Chart(departmentCtx, {
             data: {{ department_data | tojson }},
             backgroundColor: 'rgba(54, 162, 235, 0.5)',
             borderColor: 'rgba(54, 162, 235, 1)',
-            borderWidth: 1
+            borderWidth: 1,
+            borderRadius: 5
         }]
     },
     options: {
-        responsive: true,
+        ...chartOptions,
         scales: {
             y: {
-                beginAtZero: true
+                beginAtZero: true,
+                grid: {
+                    drawBorder: false
+                }
+            },
+            x: {
+                grid: {
+                    display: false
+                }
             }
         }
     }
@@ -159,7 +239,7 @@ new Chart(departmentCtx, {
 {% if doctor_names and doctor_ratings %}
 // 医生评分排行图表
 const ratingCtx = document.getElementById('ratingChart').getContext('2d');
-new Chart(ratingCtx, {
+const ratingChart = new Chart(ratingCtx, {
     type: 'bar',
     data: {
         labels: {{ doctor_names | tojson }},
@@ -168,15 +248,24 @@ new Chart(ratingCtx, {
             data: {{ doctor_ratings | tojson }},
             backgroundColor: 'rgba(75, 192, 192, 0.5)',
             borderColor: 'rgba(75, 192, 192, 1)',
-            borderWidth: 1
+            borderWidth: 1,
+            borderRadius: 5
         }]
     },
     options: {
-        responsive: true,
+        ...chartOptions,
         scales: {
             y: {
                 beginAtZero: true,
-                max: 5
+                max: 5,
+                grid: {
+                    drawBorder: false
+                }
+            },
+            x: {
+                grid: {
+                    display: false
+                }
             }
         }
     }
@@ -206,6 +295,17 @@ function handleException(exceptionId) {
             alert('操作失败，请稍后重试');
         });
     }
+}
+
+function refreshChart(chartId) {
+    const btn = event.currentTarget;
+    const icon = btn.querySelector('i');
+    btn.disabled = true;
+    icon.classList.add('fa-spin');
+    
+    setTimeout(() => {
+        location.reload();
+    }, 1000);
 }
 </script>
 {% endblock %} 

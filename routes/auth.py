@@ -19,7 +19,7 @@ def login():
         elif user_type == 'doctor':
             user = Doctor.query.filter_by(username=username).first()
         elif user_type == 'admin':
-            user = Admin.query.filter_by(id=username).first()
+            user = Admin.query.filter_by(username=username).first()
         
         if user and user.check_password(password):
             login_user(user)

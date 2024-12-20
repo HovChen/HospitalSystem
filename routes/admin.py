@@ -20,6 +20,13 @@ def dashboard():
     total_appointments = Appointment.query.count()
     pending_exceptions = Exception.query.filter_by(status='pending').count()
     
+    # 打印调试信息
+    print(f"Debug - 统计数据：")
+    print(f"总患者数: {total_patients}")
+    print(f"总医生数: {total_doctors}")
+    print(f"总预约数: {total_appointments}")
+    print(f"待处理异常: {pending_exceptions}")
+    
     # 获取最近的异常记录
     recent_exceptions = Exception.query.order_by(Exception.discovery_date.desc()).limit(5).all()
     
@@ -27,7 +34,8 @@ def dashboard():
     department_stats = db.session.query(
         Doctor.department,
         func.count(Appointment.id).label('count')
-    ).join(Appointment).group_by(Doctor.department).all()
+    ).outerjoin(Appointment, Doctor.id == Appointment.doctor_id)\
+     .group_by(Doctor.department).all()
     
     department_labels = [stat[0] for stat in department_stats]
     department_data = [stat[1] for stat in department_stats]
@@ -36,7 +44,9 @@ def dashboard():
     doctor_ratings = db.session.query(
         Doctor.name,
         func.avg(Evaluation.rating).label('avg_rating')
-    ).join(Appointment).join(Evaluation).group_by(Doctor.id, Doctor.name).all()
+    ).outerjoin(Appointment, Doctor.id == Appointment.doctor_id)\
+     .outerjoin(Evaluation, Appointment.id == Evaluation.appointment_id)\
+     .group_by(Doctor.id, Doctor.name).all()
     
     doctor_names = [rating[0] for rating in doctor_ratings]
     doctor_rating_values = [float(rating[1]) if rating[1] else 0 for rating in doctor_ratings]

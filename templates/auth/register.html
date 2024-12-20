@@ -10,7 +10,7 @@
                 <h4 class="mb-0">患者注册</h4>
             </div>
             <div class="card-body">
-                <form method="POST">
+                <form method="POST" id="registerForm">
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">姓名</label>
@@ -27,12 +27,14 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">身份证号</label>
-                            <input type="text" class="form-control" name="id_card" required
-                                   pattern="[0-9]{18}" title="请输入18位身份证号">
+                            <input type="text" class="form-control" name="id_card" id="id_card" required
+                                   pattern="[0-9]{17}[0-9X]" title="请输入18位身份证号">
+                            <div class="form-text">请输入18位身份证号码</div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">出生日期</label>
-                            <input type="date" class="form-control" name="birth_date" required>
+                            <input type="date" class="form-control" name="birth_date" id="birth_date" required readonly>
+                            <div class="form-text">将根据身份证号自动填写</div>
                         </div>
                     </div>
                     <div class="row">
@@ -62,18 +64,64 @@
 
 {% block scripts %}
 <script>
-document.querySelector('form').addEventListener('submit', function(e) {
-    const idCard = document.querySelector('input[name="id_card"]').value;
-    const phone = document.querySelector('input[name="phone"]').value;
-    
-    if (!/^\d{18}$/.test(idCard)) {
-        alert('请输入正确的18位身份证号');
+document.getElementById('id_card').addEventListener('input', function(e) {
+    const idCard = e.target.value;
+    if (idCard.length === 18) {
+        // 从身份证号提取出生日期（格式：YYYYMMDD）
+        const year = idCard.substring(6, 10);
+        const month = idCard.substring(10, 12);
+        const day = idCard.substring(12, 14);
+        
+        // 设置出生日期
+        const birthDate = `${year}-${month}-${day}`;
+        document.getElementById('birth_date').value = birthDate;
+        
+        // 根据身份证号最后一位前的数字（第17位）判断性别
+        const gender = parseInt(idCard.charAt(16)) % 2 === 0 ? 'female' : 'male';
+        document.querySelector('select[name="gender"]').value = gender;
+    }
+});
+
+document.getElementById('registerForm').addEventListener('submit', function(e) {
+    const idCard = document.getElementById('id_card').value;
+    if (idCard.length !== 18) {
+        alert('请输入18位身份证号');
         e.preventDefault();
         return;
     }
     
-    if (!/^\d{11}$/.test(phone)) {
-        alert('请输入正确的11位手机号');
+    // 验证身份证号格式
+    const idCardPattern = /^[1-9]\d{5}(19|20)\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])\d{3}[0-9X]$/;
+    if (!idCardPattern.test(idCard)) {
+        alert('身份证号格式不正确');
+        e.preventDefault();
+        return;
+    }
+    
+    // 验证出生日期是否有效
+    const year = parseInt(idCard.substring(6, 10));
+    const month = parseInt(idCard.substring(10, 12));
+    const day = parseInt(idCard.substring(12, 14));
+    
+    const birthDate = new Date(year, month - 1, day);
+    if (birthDate > new Date()) {
+        alert('出生日期不能晚于今天');
+        e.preventDefault();
+        return;
+    }
+    
+    // 验证身份证号的校验码
+    const weights = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2];
+    const codes = ['1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2'];
+    
+    let sum = 0;
+    for (let i = 0; i < 17; i++) {
+        sum += parseInt(idCard.charAt(i)) * weights[i];
+    }
+    
+    const checkCode = codes[sum % 11];
+    if (checkCode !== idCard.charAt(17).toUpperCase()) {
+        alert('身份证号校验码不正确');
         e.preventDefault();
         return;
     }

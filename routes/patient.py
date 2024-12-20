@@ -142,29 +142,48 @@ def get_available_times():
     
     # 生成可用时间段
     times = []
+    selected_date = datetime.strptime(date, '%Y-%m-%d')
+    now = datetime.now()
+    
+    # 如果���当天预约，只显示当前时间之后的时间段
+    is_today = selected_date.date() == now.date()
     
     # 上午时间段：8:30-11:30
-    current_time = datetime.strptime('08:30', '%H:%M')
-    end_time = datetime.strptime('11:30', '%H:%M')
-    
-    while current_time < end_time:
-        times.append(current_time.strftime('%H:%M'))
-        current_time += timedelta(minutes=15)
+    morning_start = datetime.strptime(f"{date} 08:30", '%Y-%m-%d %H:%M')
+    morning_end = datetime.strptime(f"{date} 11:30", '%Y-%m-%d %H:%M')
     
     # 下午时间段：14:00-17:00
-    current_time = datetime.strptime('14:00', '%H:%M')
-    end_time = datetime.strptime('17:00', '%H:%M')
+    afternoon_start = datetime.strptime(f"{date} 14:00", '%Y-%m-%d %H:%M')
+    afternoon_end = datetime.strptime(f"{date} 17:00", '%Y-%m-%d %H:%M')
     
-    while current_time < end_time:
-        times.append(current_time.strftime('%H:%M'))
-        current_time += timedelta(minutes=15)
+    # 生成上午时间段
+    if not is_today or (is_today and now < morning_end):
+        current = morning_start
+        while current < morning_end:
+            # 如果是当天且当前时间已过，跳过这个时间段
+            if is_today and current <= now:
+                current += timedelta(minutes=15)
+                continue
+            times.append(current.strftime('%H:%M'))
+            current += timedelta(minutes=15)
+    
+    # 生成下午时间段
+    if not is_today or (is_today and now < afternoon_end):
+        current = afternoon_start
+        while current < afternoon_end:
+            # 如果是当天且当前时间已过，跳过这个时间段
+            if is_today and current <= now:
+                current += timedelta(minutes=15)
+                continue
+            times.append(current.strftime('%H:%M'))
+            current += timedelta(minutes=15)
     
     print(f"生成的所有时间段：{times}")
     
     # 检查已预约的时间
     booked_appointments = Appointment.query.filter_by(
         doctor_id=doctor_id,
-        appointment_date=datetime.strptime(date, '%Y-%m-%d').date()
+        appointment_date=selected_date.date()
     ).all()
     
     booked_times = []

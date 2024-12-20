@@ -5,10 +5,10 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev'
     
     # MySQL数据库配置
-    MYSQL_HOST = 'localhost'
-    MYSQL_USER = 'root'  # 你的MySQL用户名
-    MYSQL_PASSWORD = '12345678'  # 你的MySQL密码
-    MYSQL_DB = 'hospital'  # 数据库名
+    MYSQL_HOST = '124.222.16.229'
+    MYSQL_USER = 'hospital'
+    MYSQL_PASSWORD = 'hospital'
+    MYSQL_DB = 'hospital'
     
     SQLALCHEMY_DATABASE_URI = f'mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}/{MYSQL_DB}'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
