@@ -1,0 +1,24 @@
+# 忽略 Python 缓存文件和编译文件
+__pycache__/
+*.py[cod]
+
+# 忽略环境配置
+.env
+.venv/
+env/
+venv/
+*.egg-info/
+dist/
+build/
+
+# 忽略 IDE 文件
+.vscode/
+.idea/
+*.swp
+
+# 忽略日志文件
+*.log
+
+# 忽略系统文件
+.DS_Store
+Thumbs.db
