@@ -1,89 +1,122 @@
-{% extends "base.html" %}
-
-{% block title %}我的预约 - 医院预约挂号系统{% endblock %}
-
-{% block content %}
-<div class="row">
+{% extends "base.html" %} {% block title %}个人中心 - 医院预约挂号系统{%
+endblock %} {% block content %}
+<div class="container py-4">
+  <div class="row">
     <div class="col-md-12">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h4 class="mb-0">我的预约</h4>
-                <a href="{{ url_for('patient.book_appointment') }}" class="btn btn-primary">新增预约</a>
-            </div>
-            <div class="card-body">
-                {% if appointments %}
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>预约编号</th>
-                                    <th>医生</th>
-                                    <th>科室</th>
-                                    <th>预约日期</th>
-                                    <th>预约时间</th>
-                                    <th>状态</th>
-                                    <th>操作</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for appointment in appointments %}
-                                <tr>
-                                    <td>{{ appointment.id }}</td>
-                                    <td>{{ appointment.doctor.name }}</td>
-                                    <td>{{ appointment.doctor.department }}</td>
-                                    <td>{{ appointment.appointment_date }}</td>
-                                    <td>{{ appointment.appointment_time }}</td>
-                                    <td>
-                                        {% if appointment.status == 'pending' %}
-                                            <span class="badge bg-warning">待确认</span>
-                                        {% elif appointment.status == 'confirmed' %}
-                                            <span class="badge bg-success">已确认</span>
-                                        {% elif appointment.status == 'cancelled' %}
-                                            <span class="badge bg-danger">已取消</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if appointment.status != 'cancelled' and appointment.appointment_date >= today %}
-                                            <form action="{{ url_for('patient.cancel_appointment', appointment_id=appointment.id) }}" 
-                                                  method="POST" style="display: inline;"
-                                                  onsubmit="return confirm('确定要取消这个预约吗？');">
-                                                <button type="submit" class="btn btn-sm btn-danger">取消预约</button>
-                                            </form>
-                                        {% endif %}
-                                        {% if appointment.status == 'confirmed' %}
-                                            <a href="{{ url_for('patient.evaluate', appointment_id=appointment.id) }}" 
-                                               class="btn btn-sm btn-primary">评价</a>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                {% else %}
-                    <div class="text-center py-4">
-                        <p class="text-muted">暂无预约记录</p>
-                        <a href="{{ url_for('patient.book_appointment') }}" class="btn btn-primary">立即预约</a>
-                    </div>
-                {% endif %}
-            </div>
+      <div class="card shadow-sm">
+        <div class="card-header bg-white">
+          <h4 class="mb-0">我的预约</h4>
         </div>
+        <div class="card-body">
+          {% if appointments %}
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>医生</th>
+                  <th>科室</th>
+                  <th>预约日期</th>
+                  <th>预约时间</th>
+                  <th>状态</th>
+                  <th>支付状态</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for appointment in appointments %}
+                <tr>
+                  <td>{{ appointment.doctor.name }}</td>
+                  <td>{{ appointment.doctor.department }}</td>
+                  <td>{{ appointment.appointment_date }}</td>
+                  <td>{{ appointment.appointment_time }}</td>
+                  <td>
+                    {% if appointment.status == 'pending' %}
+                    <span class="badge bg-warning">待确认</span>
+                    {% elif appointment.status == 'confirmed' %}
+                    <span class="badge bg-primary">已确认</span>
+                    {% elif appointment.status == 'completed' %}
+                    <span class="badge bg-success">已完成</span>
+                    {% elif appointment.status == 'cancelled' %}
+                    <span class="badge bg-danger">已取消</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% set payment = appointment.payments.first() %} {% if
+                    payment %} {% if payment.status == 'paid' %}
+                    <span class="badge bg-success">已支付</span>
+                    {% elif payment.status == 'pending' %}
+                    <span class="badge bg-warning">待支付</span>
+                    {% elif payment.status == 'refunded' %}
+                    <span class="badge bg-secondary">已退款</span>
+                    {% endif %} {% else %} {% if appointment.status ==
+                    'completed' %}
+                    <span class="badge bg-warning">待支付</span>
+                    {% else %}
+                    <span class="badge bg-secondary">-</span>
+                    {% endif %} {% endif %}
+                  </td>
+                  <td>
+                    {% if appointment.status != 'cancelled' and
+                    appointment.status != 'completed' and
+                    appointment.appointment_date >= today %}
+                    <form
+                      action="{{ url_for('patient.cancel_appointment', appointment_id=appointment.id) }}"
+                      method="POST"
+                      style="display: inline"
+                      onsubmit="return confirm('确定要取消这个预约吗？');"
+                    >
+                      <button type="submit" class="btn btn-sm btn-danger">
+                        取消预约
+                      </button>
+                    </form>
+                    {% endif %} {% if appointment.status == 'completed' %} {%
+                    set has_evaluation = appointment.evaluations.first() %} {%
+                    if not has_evaluation %}
+                    <a
+                      href="{{ url_for('patient.evaluate', appointment_id=appointment.id) }}"
+                      class="btn btn-sm btn-primary"
+                      >评价</a
+                    >
+                    {% else %}
+                    <span class="badge bg-secondary">已评价</span>
+                    {% endif %} {% if not payment %}
+                    <a
+                      href="{{ url_for('patient.make_payment', appointment_id=appointment.id) }}"
+                      class="btn btn-sm btn-success"
+                    >
+                      <i class="fas fa-credit-card me-1"></i>缴费
+                    </a>
+                    {% endif %} {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="text-center py-4">
+            <p class="text-muted mb-0">暂无预约记录</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
     </div>
+  </div>
 </div>
-{% endblock %}
-
-{% block scripts %}
+{% endblock %} {% block scripts %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener("DOMContentLoaded", function () {
     // 添加确认取消的功能
-    const cancelForms = document.querySelectorAll('form[action*="cancel_appointment"]');
-    cancelForms.forEach(form => {
-        form.addEventListener('submit', function(e) {
-            if (!confirm('确定要取消这个预约吗？')) {
-                e.preventDefault();
-            }
-        });
+    const cancelForms = document.querySelectorAll(
+      'form[action*="cancel_appointment"]'
+    );
+    cancelForms.forEach((form) => {
+      form.addEventListener("submit", function (e) {
+        if (!confirm("确定要取消这个预约吗？")) {
+          e.preventDefault();
+        }
+      });
     });
-});
+  });
 </script>
-{% endblock %} 
+{% endblock %}

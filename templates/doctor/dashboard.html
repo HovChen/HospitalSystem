@@ -1,157 +1,181 @@
-{% extends "base.html" %}
+{% extends "base.html" %} {% block title %}医生工作台 - 医院预约挂号系统{%
+endblock %} {% block content %}
+<div class="container py-4">
+  <div class="row">
+    <!-- 基本信息卡片 -->
+    <div class="col-md-4">
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white">
+          <h4 class="mb-0">基本信息</h4>
+        </div>
+        <div class="card-body">
+          <p><strong>姓名：</strong>{{ current_user.name }}</p>
+          <p><strong>科室：</strong>{{ current_user.department }}</p>
+          <p><strong>专业：</strong>{{ current_user.specialty }}</p>
+          <p><strong>联系电话：</strong>{{ current_user.phone }}</p>
+        </div>
+      </div>
 
-{% block title %}医生工作台 - 医院预约挂号系统{% endblock %}
+      <!-- 评价统计卡片 -->
+      <div class="card shadow-sm">
+        <div class="card-header bg-white">
+          <h4 class="mb-0">评价统计</h4>
+        </div>
+        <div class="card-body">
+          {% set total_evaluations = evaluations|length %} {% if
+          total_evaluations > 0 %} {% set avg_rating =
+          (evaluations|sum(attribute='rating') / total_evaluations)|round(1) %}
+          <div class="text-center mb-3">
+            <h2 class="mb-0 text-warning">{{ avg_rating }}</h2>
+            <p class="text-muted">平均评分</p>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <span>评价总数</span>
+            <span>{{ total_evaluations }}</span>
+          </div>
+          {% for i in range(5, 0, -1) %} {% set count =
+          evaluations|selectattr('rating', 'eq', i)|list|length %} {% set
+          percentage = (count / total_evaluations * 100)|round|int %}
+          <div class="mb-2">
+            <div class="d-flex justify-content-between mb-1">
+              <span>{{ i }}星</span>
+              <span>{{ percentage }}%</span>
+            </div>
+            <div class="progress" style="height: 6px">
+              <div
+                class="progress-bar bg-warning"
+                style="width: {{ percentage }}%"
+              ></div>
+            </div>
+          </div>
+          {% endfor %} {% else %}
+          <div class="text-center text-muted py-3">
+            <p class="mb-0">暂无评价</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
 
-{% block content %}
-<div class="row">
-    <div class="col-md-12 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h4 class="mb-0">今日预约</h4>
-            </div>
-            <div class="card-body">
-                {% if today_appointments %}
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>时间</th>
-                                    <th>患者姓名</th>
-                                    <th>性别</th>
-                                    <th>年龄</th>
-                                    <th>联系电话</th>
-                                    <th>状态</th>
-                                    <th>操作</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for appointment in today_appointments %}
-                                <tr>
-                                    <td>{{ appointment.appointment_time }}</td>
-                                    <td>{{ appointment.patient.name }}</td>
-                                    <td>{{ appointment.patient.gender }}</td>
-                                    <td>{{ appointment.patient.age }}</td>
-                                    <td>{{ appointment.patient.phone }}</td>
-                                    <td>
-                                        {% if appointment.status == 'pending' %}
-                                            <span class="badge bg-warning">待就诊</span>
-                                        {% elif appointment.status == 'in_progress' %}
-                                            <span class="badge bg-info">就诊中</span>
-                                        {% elif appointment.status == 'completed' %}
-                                            <span class="badge bg-success">已完成</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if appointment.status == 'pending' %}
-                                            <button class="btn btn-sm btn-primary"
-                                                    onclick="startConsultation({{ appointment.id }})">
-                                                开始就诊
-                                            </button>
-                                        {% elif appointment.status == 'in_progress' %}
-                                            <a href="{{ url_for('doctor.create_report', appointment_id=appointment.id) }}"
-                                               class="btn btn-sm btn-success">
-                                                填写报告
-                                            </a>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                {% else %}
-                    <p class="text-center text-muted py-4">今日暂无预约</p>
-                {% endif %}
-            </div>
+    <!-- 今日预约列表 -->
+    <div class="col-md-8">
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white">
+          <h4 class="mb-0">今日预约</h4>
         </div>
-    </div>
-    
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h4 class="mb-0">本周排班</h4>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>日期</th>
-                                <th>时间</th>
-                                <th>剩余号源</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for schedule in schedules %}
-                            <tr>
-                                <td>{{ schedule.work_date }}</td>
-                                <td>{{ schedule.start_time }} - {{ schedule.end_time }}</td>
-                                <td>{{ schedule.available_slots }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+        <div class="card-body">
+          {% if today_appointments %}
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>时间</th>
+                  <th>患者</th>
+                  <th>状态</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for appointment in today_appointments %}
+                <tr>
+                  <td>{{ appointment.appointment_time }}</td>
+                  <td>{{ appointment.patient.name }}</td>
+                  <td>
+                    {% if appointment.status == 'pending' %}
+                    <span class="badge bg-warning">待确认</span>
+                    {% elif appointment.status == 'confirmed' %}
+                    <span class="badge bg-primary">已确认</span>
+                    {% elif appointment.status == 'completed' %}
+                    <span class="badge bg-success">已完成</span>
+                    {% elif appointment.status == 'cancelled' %}
+                    <span class="badge bg-danger">已取消</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if appointment.status == 'confirmed' %}
+                    <button
+                      class="btn btn-sm btn-success"
+                      onclick="startConsultation({{ appointment.id }})"
+                    >
+                      开始就诊
+                    </button>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="text-center text-muted py-3">
+            <p class="mb-0">今日暂无预约</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- 最近评价列表 -->
+      <div class="card shadow-sm">
+        <div class="card-header bg-white">
+          <h4 class="mb-0">最近评价</h4>
+        </div>
+        <div class="card-body">
+          {% if recent_evaluations %}
+          <div class="list-group list-group-flush">
+            {% for evaluation in recent_evaluations %}
+            <div class="list-group-item px-0">
+              <div
+                class="d-flex justify-content-between align-items-center mb-2"
+              >
+                <div>
+                  <span class="text-warning me-2">
+                    {% for i in range(evaluation.rating) %} ★ {% endfor %}
+                  </span>
+                  <small class="text-muted"
+                    >{{ evaluation.created_at.strftime('%Y-%m-%d') }}</small
+                  >
                 </div>
-                <div class="text-center mt-3">
-                    <a href="{{ url_for('doctor.manage_schedule') }}" class="btn btn-primary">
-                        管理排班
-                    </a>
-                </div>
+                <small class="text-muted"
+                  >{{ evaluation.appointment.patient.name }}</small
+                >
+              </div>
+              <p class="mb-0">{{ evaluation.content }}</p>
             </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="text-center text-muted py-3">
+            <p class="mb-0">暂无评价</p>
+          </div>
+          {% endif %}
         </div>
+      </div>
     </div>
-    
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h4 class="mb-0">待处理报告</h4>
-            </div>
-            <div class="card-body">
-                {% if pending_reports %}
-                    <div class="list-group">
-                        {% for appointment in pending_reports %}
-                        <a href="{{ url_for('doctor.create_report', appointment_id=appointment.id) }}"
-                           class="list-group-item list-group-item-action">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h5 class="mb-1">{{ appointment.patient.name }}</h5>
-                                <small>{{ appointment.appointment_date }}</small>
-                            </div>
-                            <p class="mb-1">就诊时间：{{ appointment.appointment_time }}</p>
-                        </a>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <p class="text-center text-muted py-4">暂无待处理报告</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
+  </div>
 </div>
-{% endblock %}
-
-{% block scripts %}
+{% endblock %} {% block scripts %}
 <script>
-function startConsultation(appointmentId) {
-    if (confirm('确定开始就诊？')) {
-        fetch(`/doctor/start_consultation/${appointmentId}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            }
+  function startConsultation(appointmentId) {
+    if (confirm("确定开始就诊？")) {
+      fetch(`/doctor/start_consultation/${appointmentId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            location.reload();
+          } else {
+            alert(data.message);
+          }
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert(data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('操作失败，请稍后重试');
+        .catch((error) => {
+          console.error("Error:", error);
+          alert("操作失败，请稍后重试");
         });
     }
-}
+  }
 </script>
-{% endblock %} 
+{% endblock %}

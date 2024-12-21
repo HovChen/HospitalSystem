@@ -117,44 +117,37 @@ def get_doctor_info(doctor_id):
 @login_required
 def get_available_times():
     doctor_id = request.args.get('doctor_id')
-    date = request.args.get('date')
+    date_str = request.args.get('date')
     
-    print(f"获取可用时间 - 医生ID：{doctor_id}, 日期：{date}")
-    
-    if not doctor_id or not date:
-        print("缺少必要参数")
+    if not doctor_id or not date_str:
         return jsonify([])
     
+    selected_date = datetime.strptime(date_str, '%Y-%m-%d')
+    now = datetime.now().time()
+    is_today = selected_date.date() == datetime.now().date()
+    
+    # 获取医生排班信息
     schedule = Schedule.query.filter_by(
         doctor_id=doctor_id,
-        work_date=date
+        work_date=selected_date.date()
     ).first()
     
     if not schedule:
-        print("未找到排班信息")
         return jsonify([])
     
-    if schedule.available_slots <= 0:
-        print("没有可用号源")
-        return jsonify([])
-    
-    print(f"找到排班信息 - 可用号源：{schedule.available_slots}")
-    
-    # 生成可用时间段
     times = []
-    selected_date = datetime.strptime(date, '%Y-%m-%d')
-    now = datetime.now()
+    morning_start = datetime.strptime('08:00', '%H:%M').time()
+    morning_end = datetime.strptime('12:00', '%H:%M').time()
+    afternoon_start = datetime.strptime('14:00', '%H:%M').time()
+    afternoon_end = datetime.strptime('17:00', '%H:%M').time()
     
-    # 如果���当天预约，只显示当前时间之后的时间段
-    is_today = selected_date.date() == now.date()
-    
-    # 上午时间段：8:30-11:30
-    morning_start = datetime.strptime(f"{date} 08:30", '%Y-%m-%d %H:%M')
-    morning_end = datetime.strptime(f"{date} 11:30", '%Y-%m-%d %H:%M')
-    
-    # 下午时间段：14:00-17:00
-    afternoon_start = datetime.strptime(f"{date} 14:00", '%Y-%m-%d %H:%M')
-    afternoon_end = datetime.strptime(f"{date} 17:00", '%Y-%m-%d %H:%M')
+    # 如果停诊状态，检查停诊时间段
+    if schedule.status == 'off' and schedule.off_start_time and schedule.off_end_time:
+        off_start = schedule.off_start_time
+        off_end = schedule.off_end_time
+    else:
+        off_start = None
+        off_end = None
     
     # 生成上午时间段
     if not is_today or (is_today and now < morning_end):
@@ -162,10 +155,15 @@ def get_available_times():
         while current < morning_end:
             # 如果是当天且当前时间已过，跳过这个时间段
             if is_today and current <= now:
-                current += timedelta(minutes=15)
+                current = (datetime.combine(datetime.today(), current) + timedelta(minutes=15)).time()
                 continue
-            times.append(current.strftime('%H:%M'))
-            current += timedelta(minutes=15)
+            # 如果在停诊时间段内，跳过
+            if off_start and off_end and off_start <= current <= off_end:
+                current = (datetime.combine(datetime.today(), current) + timedelta(minutes=15)).time()
+                continue
+            if schedule.morning_slots > 0:
+                times.append(current.strftime('%H:%M'))
+            current = (datetime.combine(datetime.today(), current) + timedelta(minutes=15)).time()
     
     # 生成下午时间段
     if not is_today or (is_today and now < afternoon_end):
@@ -173,12 +171,29 @@ def get_available_times():
         while current < afternoon_end:
             # 如果是当天且当前时间已过，跳过这个时间段
             if is_today and current <= now:
-                current += timedelta(minutes=15)
+                current = (datetime.combine(datetime.today(), current) + timedelta(minutes=15)).time()
+                continue
+            # 如果在停诊时间段内，跳过
+            if off_start and off_end and off_start <= current <= off_end:
+                current = (datetime.combine(datetime.today(), current) + timedelta(minutes=15)).time()
+                continue
+            if schedule.afternoon_slots > 0:
+                times.append(current.strftime('%H:%M'))
+            current = (datetime.combine(datetime.today(), current) + timedelta(minutes=15)).time()
+    
+    # 如果是加班状态，添加加班时间段
+    if schedule.status == 'extra' and schedule.extra_start_time and schedule.extra_end_time and schedule.extra_slots > 0:
+        extra_start = schedule.extra_start_time
+        extra_end = schedule.extra_end_time
+        current = extra_start
+        
+        while current < extra_end:
+            # 如果是当天且当前时间已过，跳过这个时间段
+            if is_today and current <= now:
+                current = (datetime.combine(datetime.today(), current) + timedelta(minutes=15)).time()
                 continue
             times.append(current.strftime('%H:%M'))
-            current += timedelta(minutes=15)
-    
-    print(f"生成的所有时间段：{times}")
+            current = (datetime.combine(datetime.today(), current) + timedelta(minutes=15)).time()
     
     # 检查已预约的时间
     booked_appointments = Appointment.query.filter_by(
@@ -193,11 +208,9 @@ def get_available_times():
         else:
             booked_times.append(appointment.appointment_time.strftime('%H:%M'))
     
-    print(f"已预约的时间段：{booked_times}")
-    
     # 过滤掉已预约的时间
     available_times = [time for time in times if time not in booked_times]
-    print(f"可用的时间段：{available_times}")
+    available_times.sort()
     
     return jsonify(available_times)
 
@@ -220,15 +233,49 @@ def payments():
 @patient.route('/evaluate/<int:appointment_id>', methods=['GET', 'POST'])
 @login_required
 def evaluate(appointment_id):
+    # 获取预约信息
+    appointment = Appointment.query.get_or_404(appointment_id)
+    
+    # 检查是否是当前用户的预约
+    if appointment.patient_id != current_user.id:
+        flash('无权评价此预约')
+        return redirect(url_for('patient.dashboard'))
+    
+    # 检查预约状态是否为已完成
+    if appointment.status != 'completed':
+        flash('只能评价已完成的预约')
+        return redirect(url_for('patient.dashboard'))
+    
+    # 检查是否已经评价过
+    existing_evaluation = Evaluation.query.filter_by(appointment_id=appointment_id).first()
+    if existing_evaluation:
+        flash('已经评价过此预约')
+        return redirect(url_for('patient.dashboard'))
+    
     if request.method == 'POST':
         rating = request.form.get('rating')
         content = request.form.get('content')
         
+        # 验证评分
+        try:
+            rating = int(rating)
+            if rating < 1 or rating > 5:
+                raise ValueError
+        except (TypeError, ValueError):
+            flash('评分必须是1-5的整数')
+            return redirect(url_for('patient.evaluate', appointment_id=appointment_id))
+        
+        # 验证评价内容
+        if not content or len(content.strip()) < 10:
+            flash('评价内容不能少于10个字符')
+            return redirect(url_for('patient.evaluate', appointment_id=appointment_id))
+        
+        # 创建评价
         evaluation = Evaluation(
             appointment_id=appointment_id,
             patient_id=current_user.id,
             rating=rating,
-            content=content
+            content=content.strip()
         )
         
         db.session.add(evaluation)
@@ -236,8 +283,7 @@ def evaluate(appointment_id):
         
         flash('评价提交成功')
         return redirect(url_for('patient.dashboard'))
-        
-    appointment = Appointment.query.get_or_404(appointment_id)
+    
     return render_template('patient/evaluate.html', appointment=appointment)
 
 @patient.route('/cancel_appointment/<int:appointment_id>', methods=['POST'])
@@ -270,3 +316,65 @@ def cancel_appointment(appointment_id):
     
     flash('预约已取消')
     return redirect(url_for('patient.dashboard'))
+
+@patient.route('/payment/<int:appointment_id>', methods=['GET', 'POST'])
+@login_required
+def make_payment(appointment_id):
+    # 获取预约信息
+    appointment = Appointment.query.get_or_404(appointment_id)
+    
+    # 检查是否是当前用户的预约
+    if appointment.patient_id != current_user.id:
+        flash('无权操作此预约')
+        return redirect(url_for('patient.dashboard'))
+    
+    # 检查预约状态是否为已完成
+    if appointment.status != 'completed':
+        flash('只能对已完成的预约进行缴费')
+        return redirect(url_for('patient.dashboard'))
+    
+    # 检查是否已经支付
+    existing_payment = Payment.query.filter_by(appointment_id=appointment_id).first()
+    if existing_payment:
+        flash('该预约已完成支付')
+        return redirect(url_for('patient.dashboard'))
+    
+    # 根据科室设置不同的金额（模拟）
+    amount_map = {
+        '内科': 50,
+        '外科': 60,
+        '儿科': 40,
+        '妇科': 55,
+        '眼科': 45,
+        '口腔科': 65,
+        '皮肤科': 50,
+        '精神科': 80,
+        '中医科': 45
+    }
+    amount = amount_map.get(appointment.doctor.department, 50)
+    
+    if request.method == 'POST':
+        payment_method = request.form.get('payment_method')
+        
+        if not payment_method:
+            flash('请选择支付方式')
+            return redirect(url_for('patient.make_payment', appointment_id=appointment_id))
+        
+        # 创建支付记录
+        payment = Payment(
+            appointment_id=appointment_id,
+            amount=amount,
+            payment_method=payment_method,
+            payment_date=datetime.now(),
+            status='paid'  # 直接设置为已支付（模拟支付）
+        )
+        
+        db.session.add(payment)
+        db.session.commit()
+        
+        flash('支付成功')
+        return redirect(url_for('patient.dashboard'))
+    
+    return render_template('patient/payment.html', 
+                         appointment=appointment,
+                         amount=amount)

@@ -1,0 +1,718 @@
+{% extends "base.html" %} {% block title %}排班管理{% endblock %} {% block
+content %}
+<div class="row">
+  <div class="col-md-12 mb-4">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="mb-0">排班管理</h4>
+      </div>
+      <div class="card-body">
+        <ul class="nav nav-tabs mb-3">
+          <li class="nav-item">
+            <a class="nav-link active" data-bs-toggle="tab" href="#single"
+              >单日排班</a
+            >
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#batch">批量排班</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane fade show active" id="single">
+            <form method="POST" id="scheduleForm">
+              <input type="hidden" name="schedule_type" value="single" />
+              <div class="row">
+                <div class="col-md-3">
+                  <div class="mb-3">
+                    <label class="form-label">日期</label>
+                    <input
+                      type="date"
+                      class="form-control"
+                      name="work_date"
+                      required
+                    />
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="mb-3">
+                    <label class="form-label">开始时间</label>
+                    <input
+                      type="time"
+                      class="form-control"
+                      name="start_time"
+                      required
+                    />
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="mb-3">
+                    <label class="form-label">结束时间</label>
+                    <input
+                      type="time"
+                      class="form-control"
+                      name="end_time"
+                      required
+                    />
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="mb-3">
+                    <label class="form-label">状态</label>
+                    <select
+                      class="form-select"
+                      name="status"
+                      id="scheduleStatus"
+                      required
+                    >
+                      <option value="normal">正常</option>
+                      <option value="off">停诊</option>
+                      <option value="extra">加班</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="row" id="extraTimeSection" style="display: none">
+                <div class="col-md-3">
+                  <div class="mb-3">
+                    <label class="form-label">加班开始时间</label>
+                    <input
+                      type="time"
+                      class="form-control"
+                      name="extra_start_time"
+                    />
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="mb-3">
+                    <label class="form-label">加班结束时间</label>
+                    <input
+                      type="time"
+                      class="form-control"
+                      name="extra_end_time"
+                    />
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="mb-3">
+                    <label class="form-label">加班号源数</label>
+                    <input
+                      type="number"
+                      class="form-control"
+                      name="extra_slots"
+                      value="6"
+                      min="0"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div class="row" id="offTimeSection" style="display: none">
+                <div class="col-md-3">
+                  <div class="mb-3">
+                    <label class="form-label">停诊开始时间</label>
+                    <input
+                      type="time"
+                      class="form-control"
+                      name="off_start_time"
+                    />
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="mb-3">
+                    <label class="form-label">停诊结束时间</label>
+                    <input
+                      type="time"
+                      class="form-control"
+                      name="off_end_time"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-3">
+                  <div class="mb-3">
+                    <label class="form-label">上午号源数</label>
+                    <input
+                      type="number"
+                      class="form-control"
+                      name="morning_slots"
+                      value="12"
+                      min="0"
+                      required
+                    />
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="mb-3">
+                    <label class="form-label">下午号源数</label>
+                    <input
+                      type="number"
+                      class="form-control"
+                      name="afternoon_slots"
+                      value="12"
+                      min="0"
+                      required
+                    />
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="mb-3 d-flex align-items-end h-100">
+                    <button type="submit" class="btn btn-primary">
+                      添加排班
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="tab-pane fade" id="batch">
+            <form method="POST" id="batchScheduleForm">
+              <input type="hidden" name="schedule_type" value="batch" />
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label">起始日期</label>
+                    <input
+                      type="date"
+                      class="form-control"
+                      name="start_date"
+                      required
+                    />
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label">结束日期</label>
+                    <input
+                      type="date"
+                      class="form-control"
+                      name="end_date"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-12">
+                  <div class="mb-3">
+                    <label class="form-label">重复模式</label>
+                    <div class="btn-group w-100" role="group">
+                      <input
+                        type="checkbox"
+                        class="btn-check"
+                        name="weekdays"
+                        value="0"
+                        id="monday"
+                      />
+                      <label class="btn btn-outline-primary" for="monday"
+                        >周一</label
+                      >
+                      <input
+                        type="checkbox"
+                        class="btn-check"
+                        name="weekdays"
+                        value="1"
+                        id="tuesday"
+                      />
+                      <label class="btn btn-outline-primary" for="tuesday"
+                        >周二</label
+                      >
+                      <input
+                        type="checkbox"
+                        class="btn-check"
+                        name="weekdays"
+                        value="2"
+                        id="wednesday"
+                      />
+                      <label class="btn btn-outline-primary" for="wednesday"
+                        >周三</label
+                      >
+                      <input
+                        type="checkbox"
+                        class="btn-check"
+                        name="weekdays"
+                        value="3"
+                        id="thursday"
+                      />
+                      <label class="btn btn-outline-primary" for="thursday"
+                        >周四</label
+                      >
+                      <input
+                        type="checkbox"
+                        class="btn-check"
+                        name="weekdays"
+                        value="4"
+                        id="friday"
+                      />
+                      <label class="btn btn-outline-primary" for="friday"
+                        >周五</label
+                      >
+                      <input
+                        type="checkbox"
+                        class="btn-check"
+                        name="weekdays"
+                        value="5"
+                        id="saturday"
+                      />
+                      <label class="btn btn-outline-primary" for="saturday"
+                        >周六</label
+                      >
+                      <input
+                        type="checkbox"
+                        class="btn-check"
+                        name="weekdays"
+                        value="6"
+                        id="sunday"
+                      />
+                      <label class="btn btn-outline-primary" for="sunday"
+                        >周日</label
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-3">
+                  <div class="mb-3">
+                    <label class="form-label">开始时间</label>
+                    <input
+                      type="time"
+                      class="form-control"
+                      name="start_time"
+                      required
+                    />
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="mb-3">
+                    <label class="form-label">结束时间</label>
+                    <input
+                      type="time"
+                      class="form-control"
+                      name="end_time"
+                      required
+                    />
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="mb-3">
+                    <label class="form-label">上午号源数</label>
+                    <input
+                      type="number"
+                      class="form-control"
+                      name="morning_slots"
+                      value="12"
+                      min="0"
+                      required
+                    />
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="mb-3">
+                    <label class="form-label">下午号源数</label>
+                    <input
+                      type="number"
+                      class="form-control"
+                      name="afternoon_slots"
+                      value="12"
+                      min="0"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-12">
+                  <button type="submit" class="btn btn-primary">
+                    批量添加排班
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-12">
+    <div class="card">
+      <div
+        class="card-header d-flex justify-content-between align-items-center"
+      >
+        <h4 class="mb-0">排班列表</h4>
+        <div class="d-flex gap-2">
+          <select
+            class="form-select form-select-sm"
+            id="statusFilter"
+            style="width: auto"
+          >
+            <option value="">全部状态</option>
+            <option value="normal">正常</option>
+            <option value="off">停诊</option>
+            <option value="extra">加班</option>
+          </select>
+          <select
+            class="form-select form-select-sm"
+            id="dateFilter"
+            style="width: auto"
+          >
+            <option value="7">最近7天</option>
+            <option value="30" selected>最近30天</option>
+            <option value="90">最近90天</option>
+            <option value="all">全部</option>
+          </select>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover" id="scheduleTable">
+            <thead>
+              <tr>
+                <th>日期 <i class="fas fa-sort"></i></th>
+                <th>时间</th>
+                <th>状态</th>
+                <th>上午号源</th>
+                <th>下午号源</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for schedule in schedules %}
+              <tr
+                data-status="{{ schedule.status }}"
+                data-date="{{ schedule.work_date }}"
+              >
+                <td>{{ schedule.work_date }}</td>
+                <td>{{ schedule.start_time }} - {{ schedule.end_time }}</td>
+                <td>
+                  {% if schedule.status == 'normal' %}
+                  <span class="badge bg-success">正常</span>
+                  {% elif schedule.status == 'off' %}
+                  <span class="badge bg-danger">停诊</span>
+                  {% elif schedule.status == 'extra' %}
+                  <span class="badge bg-info">加班</span>
+                  {% endif %}
+                </td>
+                <td>{{ schedule.morning_slots }}/12</td>
+                <td>{{ schedule.afternoon_slots }}/12</td>
+                <td>
+                  <div class="btn-group">
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-warning"
+                      onclick="editSchedule({{ schedule.id }})"
+                    >
+                      修改
+                    </button>
+                    <a
+                      href="{{ url_for('doctor.cancel_schedule', schedule_id=schedule.id) }}"
+                      class="btn btn-sm btn-danger"
+                      onclick="return confirm('确定要取消这个排班吗？')"
+                      >取消</a
+                    >
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 修改排班的模态框 -->
+<div class="modal fade" id="editScheduleModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">修改排班</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <form id="editScheduleForm" method="POST">
+          <input type="hidden" name="schedule_id" id="editScheduleId" />
+          <div class="mb-3">
+            <label class="form-label">状态</label>
+            <select class="form-select" name="status" id="editStatus" required>
+              <option value="normal">正常</option>
+              <option value="off">停诊</option>
+              <option value="extra">加班</option>
+            </select>
+          </div>
+          <div id="editExtraTimeSection" style="display: none">
+            <div class="mb-3">
+              <label class="form-label">加班开始时间</label>
+              <input
+                type="time"
+                class="form-control"
+                name="extra_start_time"
+                id="editExtraStartTime"
+              />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">加班结束时间</label>
+              <input
+                type="time"
+                class="form-control"
+                name="extra_end_time"
+                id="editExtraEndTime"
+              />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">加班号源数</label>
+              <input
+                type="number"
+                class="form-control"
+                name="extra_slots"
+                id="editExtraSlots"
+                value="6"
+                min="0"
+              />
+            </div>
+          </div>
+          <div id="editOffTimeSection" style="display: none">
+            <div class="mb-3">
+              <label class="form-label">停诊开始时间</label>
+              <input
+                type="time"
+                class="form-control"
+                name="off_start_time"
+                id="editOffStartTime"
+              />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">停诊结束时间</label>
+              <input
+                type="time"
+                class="form-control"
+                name="off_end_time"
+                id="editOffEndTime"
+              />
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">上午号源数</label>
+            <input
+              type="number"
+              class="form-control"
+              name="morning_slots"
+              id="editMorningSlots"
+              min="0"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">下午号源数</label>
+            <input
+              type="number"
+              class="form-control"
+              name="afternoon_slots"
+              id="editAfternoonSlots"
+              min="0"
+              required
+            />
+          </div>
+          <div class="text-end">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              取消
+            </button>
+            <button type="submit" class="btn btn-primary">保存</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block scripts %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const table = document.getElementById("scheduleTable");
+    const statusFilter = document.getElementById("statusFilter");
+    const dateFilter = document.getElementById("dateFilter");
+
+    // 日期排序
+    table.querySelector("th").addEventListener("click", function () {
+      const tbody = table.querySelector("tbody");
+      const rows = Array.from(tbody.querySelectorAll("tr"));
+      const th = this;
+      const isAsc = th.querySelector("i").className.includes("fa-sort-up");
+
+      th.querySelector("i").className = isAsc
+        ? "fas fa-sort-down"
+        : "fas fa-sort-up";
+
+      rows.sort((a, b) => {
+        const dateA = new Date(a.dataset.date);
+        const dateB = new Date(b.dataset.date);
+        return isAsc ? dateB - dateA : dateA - dateB;
+      });
+
+      rows.forEach((row) => tbody.appendChild(row));
+    });
+
+    // 状态和日期筛选
+    statusFilter.addEventListener("change", filterSchedules);
+    dateFilter.addEventListener("change", filterSchedules);
+
+    function filterSchedules() {
+      const status = statusFilter.value;
+      const days = dateFilter.value;
+      const rows = table.querySelectorAll("tbody tr");
+
+      rows.forEach((row) => {
+        let showRow = true;
+
+        if (status && row.dataset.status !== status) {
+          showRow = false;
+        }
+
+        if (days !== "all") {
+          const date = new Date(row.dataset.date);
+          const now = new Date();
+          const diffTime = Math.abs(now - date);
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+          if (diffDays > parseInt(days)) {
+            showRow = false;
+          }
+        }
+
+        row.style.display = showRow ? "" : "none";
+      });
+    }
+
+    // 初始筛选
+    filterSchedules();
+
+    // 日期选择限制
+    const today = new Date().toISOString().split("T")[0];
+    document.querySelector('input[name="work_date"]').min = today;
+    document.querySelector('input[name="start_date"]').min = today;
+    document.querySelector('input[name="end_date"]').min = today;
+
+    // 结束日期不能早于开始日期
+    document
+      .querySelector('input[name="start_date"]')
+      .addEventListener("change", function () {
+        document.querySelector('input[name="end_date"]').min = this.value;
+      });
+
+    // 至少选择一天
+    document
+      .getElementById("batchScheduleForm")
+      .addEventListener("submit", function (e) {
+        const weekdays = document.querySelectorAll(
+          'input[name="weekdays"]:checked'
+        );
+        if (weekdays.length === 0) {
+          e.preventDefault();
+          alert("请至少选择一天进行排班");
+        }
+      });
+
+    // 状态切换时显示/隐藏时间设置
+    const scheduleStatus = document.getElementById("scheduleStatus");
+    const extraTimeSection = document.getElementById("extraTimeSection");
+    const offTimeSection = document.getElementById("offTimeSection");
+
+    scheduleStatus.addEventListener("change", function () {
+      extraTimeSection.style.display = this.value === "extra" ? "flex" : "none";
+      offTimeSection.style.display = this.value === "off" ? "flex" : "none";
+
+      if (this.value === "extra") {
+        document.querySelector(
+          'input[name="extra_start_time"]'
+        ).required = true;
+        document.querySelector('input[name="extra_end_time"]').required = true;
+        document.querySelector('input[name="extra_slots"]').required = true;
+        document.querySelector('input[name="off_start_time"]').required = false;
+        document.querySelector('input[name="off_end_time"]').required = false;
+      } else if (this.value === "off") {
+        document.querySelector(
+          'input[name="extra_start_time"]'
+        ).required = false;
+        document.querySelector('input[name="extra_end_time"]').required = false;
+        document.querySelector('input[name="extra_slots"]').required = false;
+        document.querySelector('input[name="off_start_time"]').required = true;
+        document.querySelector('input[name="off_end_time"]').required = true;
+      } else {
+        document.querySelector(
+          'input[name="extra_start_time"]'
+        ).required = false;
+        document.querySelector('input[name="extra_end_time"]').required = false;
+        document.querySelector('input[name="extra_slots"]').required = false;
+        document.querySelector('input[name="off_start_time"]').required = false;
+        document.querySelector('input[name="off_end_time"]').required = false;
+      }
+    });
+
+    // 编辑模态框中的状态切换
+    const editStatus = document.getElementById("editStatus");
+    const editExtraTimeSection = document.getElementById(
+      "editExtraTimeSection"
+    );
+    const editOffTimeSection = document.getElementById("editOffTimeSection");
+
+    editStatus.addEventListener("change", function () {
+      editExtraTimeSection.style.display =
+        this.value === "extra" ? "block" : "none";
+      editOffTimeSection.style.display =
+        this.value === "off" ? "block" : "none";
+
+      if (this.value === "extra") {
+        document.getElementById("editExtraStartTime").required = true;
+        document.getElementById("editExtraEndTime").required = true;
+        document.getElementById("editExtraSlots").required = true;
+        document.getElementById("editOffStartTime").required = false;
+        document.getElementById("editOffEndTime").required = false;
+      } else if (this.value === "off") {
+        document.getElementById("editExtraStartTime").required = false;
+        document.getElementById("editExtraEndTime").required = false;
+        document.getElementById("editExtraSlots").required = false;
+        document.getElementById("editOffStartTime").required = true;
+        document.getElementById("editOffEndTime").required = true;
+      } else {
+        document.getElementById("editExtraStartTime").required = false;
+        document.getElementById("editExtraEndTime").required = false;
+        document.getElementById("editExtraSlots").required = false;
+        document.getElementById("editOffStartTime").required = false;
+        document.getElementById("editOffEndTime").required = false;
+      }
+    });
+  });
+
+  // 编辑排班
+  function editSchedule(scheduleId) {
+    const form = document.getElementById("editScheduleForm");
+    form.action = `/doctor/schedule/${scheduleId}`;
+
+    fetch(`/doctor/schedule/${scheduleId}`)
+      .then((response) => response.json())
+      .then((data) => {
+        document.getElementById("editScheduleId").value = data.id;
+        document.getElementById("editStatus").value = data.status;
+        document.getElementById("editMorningSlots").value = data.morning_slots;
+        document.getElementById("editAfternoonSlots").value =
+          data.afternoon_slots;
+
+        new bootstrap.Modal(
+          document.getElementById("editScheduleModal")
+        ).show();
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        alert("获取排班信息失败，请稍后重试");
+      });
+  }
+</script>
+{% endblock %}

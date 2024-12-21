@@ -1,0 +1,110 @@
+{% extends "base.html" %} {% block title %}缴费支付 - 医院预约挂号系统{%
+endblock %} {% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow-sm">
+        <div class="card-header bg-white">
+          <h4 class="mb-0">缴费支付</h4>
+        </div>
+        <div class="card-body">
+          <div class="mb-4">
+            <h5>就诊信息</h5>
+            <p class="mb-1">
+              <strong>医生：</strong>{{ appointment.doctor.name }} - {{
+              appointment.doctor.department }}
+            </p>
+            <p class="mb-1">
+              <strong>就诊时间：</strong>{{ appointment.appointment_date }} {{
+              appointment.appointment_time }}
+            </p>
+            <p class="mb-1"><strong>应付金额：</strong>¥{{ amount }}</p>
+          </div>
+
+          <form method="POST">
+            <div class="mb-4">
+              <label class="form-label">支付方式</label>
+              <div class="btn-group w-100" role="group">
+                <input
+                  type="radio"
+                  class="btn-check"
+                  name="payment_method"
+                  value="alipay"
+                  id="alipay"
+                  required
+                />
+                <label class="btn btn-outline-primary" for="alipay">
+                  <i class="fab fa-alipay me-2"></i>支付宝
+                </label>
+
+                <input
+                  type="radio"
+                  class="btn-check"
+                  name="payment_method"
+                  value="wechat"
+                  id="wechat"
+                  required
+                />
+                <label class="btn btn-outline-primary" for="wechat">
+                  <i class="fab fa-weixin me-2"></i>微信支付
+                </label>
+
+                <input
+                  type="radio"
+                  class="btn-check"
+                  name="payment_method"
+                  value="card"
+                  id="card"
+                  required
+                />
+                <label class="btn btn-outline-primary" for="card">
+                  <i class="fas fa-credit-card me-2"></i>银行卡
+                </label>
+              </div>
+            </div>
+
+            <div class="alert alert-info" role="alert">
+              <i class="fas fa-info-circle me-2"></i>
+              这是一个模拟支付系统，选择任意支付方式都会直接完成支付。
+            </div>
+
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-check me-2"></i>确认支付
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block scripts %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // 表单提交前验证
+    document.querySelector("form").addEventListener("submit", function (e) {
+      const paymentMethod = document.querySelector(
+        'input[name="payment_method"]:checked'
+      );
+
+      if (!paymentMethod) {
+        e.preventDefault();
+        alert("请选择支付方式");
+        return;
+      }
+
+      if (
+        !confirm(
+          "确定要使用" +
+            paymentMethod.nextElementSibling.textContent.trim() +
+            "支付吗？"
+        )
+      ) {
+        e.preventDefault();
+        return;
+      }
+    });
+  });
+</script>
+{% endblock %}

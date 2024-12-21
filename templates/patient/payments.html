@@ -1,0 +1,69 @@
+{% extends "base.html" %} {% block title %}缴费记录 - 医院预约挂号系统{%
+endblock %} {% block content %}
+<div class="container py-4">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card shadow-sm">
+        <div class="card-header bg-white">
+          <h4 class="mb-0">缴费记录</h4>
+        </div>
+        <div class="card-body">
+          {% if payments %}
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>就诊医生</th>
+                  <th>就诊科室</th>
+                  <th>就诊时间</th>
+                  <th>缴费金额</th>
+                  <th>支付方式</th>
+                  <th>支付时间</th>
+                  <th>支付状态</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for payment in payments %}
+                <tr>
+                  <td>{{ payment.appointment.doctor.name }}</td>
+                  <td>{{ payment.appointment.doctor.department }}</td>
+                  <td>
+                    {{ payment.appointment.appointment_date }} {{
+                    payment.appointment.appointment_time }}
+                  </td>
+                  <td>¥{{ payment.amount }}</td>
+                  <td>
+                    {% if payment.payment_method == 'alipay' %}
+                    <span><i class="fab fa-alipay me-1"></i>支付宝</span>
+                    {% elif payment.payment_method == 'wechat' %}
+                    <span><i class="fab fa-weixin me-1"></i>微信支付</span>
+                    {% elif payment.payment_method == 'card' %}
+                    <span><i class="fas fa-credit-card me-1"></i>银行卡</span>
+                    {% endif %}
+                  </td>
+                  <td>{{ payment.payment_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                  <td>
+                    {% if payment.status == 'paid' %}
+                    <span class="badge bg-success">已支付</span>
+                    {% elif payment.status == 'pending' %}
+                    <span class="badge bg-warning">待支付</span>
+                    {% elif payment.status == 'refunded' %}
+                    <span class="badge bg-secondary">已退款</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="text-center py-4">
+            <p class="text-muted mb-0">暂无缴费记录</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
